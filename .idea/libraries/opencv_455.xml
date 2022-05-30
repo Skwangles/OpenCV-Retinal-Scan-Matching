@@ -4,6 +4,10 @@
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
     </CLASSES>
     <JAVADOC />
+    <NATIVE>
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java/x64" />
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java/x86" />
+    </NATIVE>
     <SOURCES>
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
