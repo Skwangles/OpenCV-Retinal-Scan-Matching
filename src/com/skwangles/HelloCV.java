@@ -41,8 +41,8 @@ public class HelloCV
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // prepare to convert a RGB image in gray scale
-        String location = "RIDB/IM000001_1.jpg";
-        String location2 = "RIDB/IM000002_2.jpg";
+        String location = "RIDB/IM000003_8.jpg";
+        String location2 = "RIDB/IM000002_8.jpg";
         System.out.println("Convert the image at " + location + " in gray scale... ");
         // get the jpeg image from the internal resource folder
         Mat src1 = Imgcodecs.imread(location);
@@ -53,27 +53,30 @@ public class HelloCV
             System.exit(0);
         }
 
-        namedWindow("Original");
-        imshow("Original", src1);
-        namedWindow("Original2");
-        imshow("Original2", src2);
-        waitKey();
 
         cvtColor(src1, src1, COLOR_BGR2GRAY);
         cvtColor(src2, src2, COLOR_BGR2GRAY);
-        //Compare beforhand to after
+
+
+        Mat blackWhite1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
+        Mat blackWhite2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
+        threshold(src1, blackWhite1, 15, 255, THRESH_BINARY);
+        threshold(src2, blackWhite2, 15, 255, THRESH_BINARY);
+        printSrcs(blackWhite1, blackWhite2);
+
+
         equalizeHist(src1, src1);
         equalizeHist(src2, src2);
-        //printSrcs(src1, src2);
+        printSrcs(src1, src2);
 
         GaussianBlur(src1, src1, new Size(7,7), 15);
         GaussianBlur(src2, src2, new Size(7,7), 15);
 
         printSrcs(src1, src2);
 
+
         Mat mask1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
         Mat mask2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
-
         adaptiveThreshold(src1, mask1 , 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
         adaptiveThreshold(src2, mask2, 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
 
@@ -83,11 +86,11 @@ public class HelloCV
         Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         dilate(mask1, mask1, element );
         dilate(mask2, mask2, element );
-        //printSrcs(mask1, mask2);
+        printSrcs(mask1, mask2);
 
         GaussianBlur(mask1, mask1, new Size(11,11), 24);
         GaussianBlur(mask2, mask2, new Size(11,11), 24);
-        //printSrcs(mask1, mask2);
+        printSrcs(mask1, mask2);
 
         kernelSize = 2;
         element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
@@ -95,17 +98,17 @@ public class HelloCV
         erode(mask2, mask2, element );
         printSrcs(mask1, mask2);
 
-
         List<Mat> hsvBaseList = Arrays.asList(mask1);
-        Imgproc.calcHist(hsvBaseList, new MatOfInt(0), new Mat(), mask1, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
+        Imgproc.calcHist(hsvBaseList, new MatOfInt(0), blackWhite1, mask1, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
         Core.normalize(mask1, mask1, 0, 1, Core.NORM_MINMAX);
 
         List<Mat> hsvBaseList2 = Arrays.asList(mask2);
-        Imgproc.calcHist(hsvBaseList2, new MatOfInt(0), new Mat(), mask2, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
+        Imgproc.calcHist(hsvBaseList2, new MatOfInt(0), blackWhite2, mask2, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
         Core.normalize(mask2, mask2, 0, 1, Core.NORM_MINMAX);
 
         double output = compareHist(mask1, mask2, 0); //Chi-square comparison method
         System.out.println(output);
+        if(output > 0.99996) System.out.println("Its a match!");
         System.out.println("Done!");
     }
 
