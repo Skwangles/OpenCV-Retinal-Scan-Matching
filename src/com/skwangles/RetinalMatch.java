@@ -1,16 +1,11 @@
 package com.skwangles;
 import org.opencv.core.*;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.opencv.core.Core.*;
-import static org.opencv.core.CvType.CV_16S;
-import static org.opencv.core.CvType.CV_64F;
 import static org.opencv.highgui.HighGui.*;
 import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static org.opencv.imgproc.Imgproc.*;
@@ -25,7 +20,7 @@ import static org.opencv.imgproc.Imgproc.*;
  * @since 2013-10-20
  *
  */
-public class HelloCV
+public class RetinalMatch
 {
     public static void main(String[] args)
     {
