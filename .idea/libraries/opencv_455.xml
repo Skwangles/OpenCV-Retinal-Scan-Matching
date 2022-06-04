@@ -2,6 +2,8 @@
   <library name="opencv-455">
     <CLASSES>
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java" />
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java" />
     </CLASSES>
     <JAVADOC />
     <NATIVE>
@@ -11,6 +13,12 @@
     <SOURCES>
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
       <root url="jar://$USER_HOME$/Downloads/opencv/build/java/opencv-455.jar!/" />
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java" />
+      <root url="file://$USER_HOME$/Downloads/opencv/build/java" />
     </SOURCES>
+    <jarDirectory url="file://$USER_HOME$/Downloads/opencv/build/java" recursive="false" />
+    <jarDirectory url="file://$USER_HOME$/Downloads/opencv/build/java" recursive="false" />
+    <jarDirectory url="file://$USER_HOME$/Downloads/opencv/build/java" recursive="false" type="SOURCES" />
+    <jarDirectory url="file://$USER_HOME$/Downloads/opencv/build/java" recursive="false" type="SOURCES" />
   </library>
 </component>
