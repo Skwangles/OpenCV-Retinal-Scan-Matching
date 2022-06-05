@@ -22,6 +22,10 @@ import static org.opencv.imgproc.Imgproc.*;
  */
 public class RetinalMatch
 {
+
+
+
+
     public static void main(String[] args)
     {
         //Pipeline
@@ -35,77 +39,105 @@ public class RetinalMatch
         // load the OpenCV native library
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-        // prepare to convert a RGB image in gray scale
-        String location = "RIDB/IM000003_8.jpg";
-        String location2 = "RIDB/IM000002_8.jpg";
-        System.out.println("Convert the image at " + location + " in gray scale... ");
+        String prefix = "RIDB/IM00000";
+        for(int item1batch = 1; item1batch <= 5; item1batch++){
+         for(int item1 = 1; item1 <= 20; item1++){
+             for(int item2batch = 1; item2batch <= 5; item2batch++){
+                 for (int item2 = 1; item2 <= 20; item2++){
+                     CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
+                 }
+             }
+         }
+        }
+    }
+
+
+    public static double CheckImages(String src1path, String src2path){
+        double matchThreshold = 0.9999545;
         // get the jpeg image from the internal resource folder
-        Mat src1 = Imgcodecs.imread(location);
-        Mat src2 = Imgcodecs.imread(location2);
+        Mat src1 = Imgcodecs.imread(src1path);
+        Mat src2 = Imgcodecs.imread(src2path);
 
         if (src1.empty() || src2.empty()) {
             System.err.println("Cannot read the images");
             System.exit(0);
         }
 
-
+        //To Grayscale
         cvtColor(src1, src1, COLOR_BGR2GRAY);
         cvtColor(src2, src2, COLOR_BGR2GRAY);
 
-
+        //Create mask to avoid comparing edge of the image
         Mat blackWhite1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
         Mat blackWhite2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
         threshold(src1, blackWhite1, 15, 255, THRESH_BINARY);
         threshold(src2, blackWhite2, 15, 255, THRESH_BINARY);
-        printSrcs(blackWhite1, blackWhite2);
 
+        //Blur image
+        GaussianBlur(src1, src1, new Size(7,7), 23);
+        GaussianBlur(src2, src2, new Size(7,7), 23);
 
         equalizeHist(src1, src1);
         equalizeHist(src2, src2);
-        printSrcs(src1, src2);
 
-        GaussianBlur(src1, src1, new Size(7,7), 15);
-        GaussianBlur(src2, src2, new Size(7,7), 15);
+        GaussianBlur(src1, src1, new Size(7,7), 23);
+        GaussianBlur(src2, src2, new Size(7,7), 23);
 
-        printSrcs(src1, src2);
-
-
-        Mat mask1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
-        Mat mask2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
-        adaptiveThreshold(src1, mask1 , 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
-        adaptiveThreshold(src2, mask2, 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
+        adaptiveThreshold(src1, src1 , 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
+        adaptiveThreshold(src2, src2, 255,ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV,7,4);
 
 
+        //Erode away the noise - dilate does what erode should, idk why
         int kernelSize = 1;
-        int elementType = Imgproc.CV_SHAPE_RECT;
+        int elementType = CV_SHAPE_RECT;
         Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
-        dilate(mask1, mask1, element );
-        dilate(mask2, mask2, element );
-        printSrcs(mask1, mask2);
+        dilate(src1, src1, element );
+        dilate(src2, src2, element );
 
-        GaussianBlur(mask1, mask1, new Size(11,11), 24);
-        GaussianBlur(mask2, mask2, new Size(11,11), 24);
-        printSrcs(mask1, mask2);
+        GaussianBlur(src1, src1, new Size(11,11), 24);
+        GaussianBlur(src2, src2, new Size(11,11), 24);
 
         kernelSize = 2;
         element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
-        erode(mask1, mask1, element );
-        erode(mask2, mask2, element );
-        printSrcs(mask1, mask2);
+        erode(src1, src1, element );
+        erode(src2, src2, element );
 
-        List<Mat> hsvBaseList = Arrays.asList(mask1);
-        Imgproc.calcHist(hsvBaseList, new MatOfInt(0), blackWhite1, mask1, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
-        Core.normalize(mask1, mask1, 0, 1, Core.NORM_MINMAX);
 
-        List<Mat> hsvBaseList2 = Arrays.asList(mask2);
-        Imgproc.calcHist(hsvBaseList2, new MatOfInt(0), blackWhite2, mask2, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
-        Core.normalize(mask2, mask2, 0, 1, Core.NORM_MINMAX);
 
-        double output = compareHist(mask1, mask2, 0); //Chi-square comparison method
-        System.out.println(output);
-        if(output > 0.99996) System.out.println("Its a match!");
-        System.out.println("Done!");
+
+        //Create image histograms for comparison
+
+        List<Mat> hsvBaseList = Arrays.asList(src1);
+        Imgproc.calcHist(hsvBaseList, new MatOfInt(0), blackWhite1, src1, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
+        Core.normalize(src1, src1, 0, 1, Core.NORM_MINMAX);
+
+        List<Mat> hsvBaseList2 = Arrays.asList(src2);
+        Imgproc.calcHist(hsvBaseList2, new MatOfInt(0), blackWhite2, src2, new MatOfInt(new int[]{10}), new MatOfFloat(0, 256), false);
+        Core.normalize(src2, src2, 0, 1, Core.NORM_MINMAX);
+
+        //Compare and check
+        double output = compareHist(src1, src2, 0); //Chi-square comparison method
+        //System.out.println(output);
+        //if(output > 0.999945) System.out.println("Its a match @ " + output);
+        String[] strs1 = src1path.split("_");
+        String num1 = strs1[1].substring(0,strs1[1].length()-4);
+
+        String[] strs2 = src2path.split("_");
+        String num2 = strs2[1].substring(0,strs2[1].length()-4);
+        if(output > matchThreshold){
+           if(!num1.equals(num2)) {
+           System.out.println("INCORRECT MATCH: " + output + " " + src1path + "&" + src2path);
+           }
+        }
+        else{
+            if(num1.equals(num2)) {
+                System.out.println("NON-MATCH: " + output + " " + src1path + "&" + src2path);
+            }
+        }
+        return output;
     }
+
+
 
     public static void printSrcs(Mat src1, Mat src2){
         namedWindow("src2");
