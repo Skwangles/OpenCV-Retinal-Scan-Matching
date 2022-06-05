@@ -11,15 +11,6 @@ import static org.opencv.imgcodecs.Imgcodecs.imwrite;
 import static org.opencv.imgproc.Imgproc.*;
 
 
-/**
- * A simple class that demonstrates/tests the usage of the OpenCV library in
- * Java. It prints a 3x3 identity matrix and then converts a given image in gray
- * scale.
- *
- * @author <a href="mailto:luigi.derussis@polito.it">Luigi De Russis</a>
- * @since 2013-10-20
- *
- */
 public class RetinalMatch
 {
 
@@ -35,6 +26,10 @@ public class RetinalMatch
         // • Pick image transformations (e.g. edges, thresholded, etc) and features
         // • Hopefully get something that works
 
+        //Proposed pipeline - Autocontrast, threshold, intensity histogram
+        //unsharp masking?
+        //comparing image histograms - Vision lab 2
+        //Template matching??
 
         // load the OpenCV native library
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
