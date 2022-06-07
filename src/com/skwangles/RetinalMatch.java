@@ -15,8 +15,9 @@ import static org.opencv.imgproc.Imgproc.*;
 
 public class RetinalMatch
 {
-
-
+    private static int countOfFails = 0;
+    private static int totalComparisons = 0;
+    private static Random rand = new Random();
 
 
     public static void main(String[] args)
@@ -40,9 +41,11 @@ public class RetinalMatch
 
         String prefix = "RIDB/IM00000";
 
-        CheckAll(prefix);
-
+        //CheckAll(prefix);
+        //CheckAllSame(prefix);
         //CheckSpecific(prefix, 3, 4, 4, 4);
+        CheckCompletelyRandom(prefix, 500);
+        System.out.println("Stats: Failure "+countOfFails/totalComparisons + "% - From " + countOfFails + "/" + totalComparisons + " Comparisons");
     }
 
     public static void CheckSpecific(String prefix, int batch1, int src1, int batch2, int src2){
@@ -61,9 +64,54 @@ public class RetinalMatch
                      }
                      compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
                      CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
+                        totalComparisons++;
                  }
              }
          }
+        }
+    }
+
+    public static void CheckCompletelyRandom(String prefix, int comparisons){
+        //Test all images here
+        HashSet<String> compared = new HashSet<>();
+        for(int i = 0; i < comparisons; i++){
+            int item1batch = 0;
+            int item2batch = 0;
+            int item1 = 0;
+            int item2 = 0;
+            do {
+                item1batch = rand.nextInt(5) + 1;
+                item2batch = rand.nextInt(5) + 1;
+                item1 = rand.nextInt(20) + 1;
+                item2 = rand.nextInt(20) + 1;
+            }
+            while(compared.contains(item2batch + "_" + item2 + "__"+item1batch + "_" + item1) || compared.contains(item1batch + "_" + item1 + "__"+item2batch + "_" + item2));
+
+            compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
+            CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
+            totalComparisons++;
+        }
+    }
+
+
+
+    public static void CheckAllSame(String prefix){
+        //Test all images here
+        HashSet<String> compared = new HashSet<>();
+        for(int item1batch = 1; item1batch <= 5; item1batch++){
+            for(int item1 = 1; item1 <= 20; item1++){
+                for(int item2batch = 1; item2batch <= 5; item2batch++){
+                    for (int item2 = 1; item2 <= 20; item2++){
+                        if(item1 != item2) continue;
+                        if(compared.contains(item2batch + "_" + item2 + "__"+item1batch + "_" + item1)){//Will only be in if in reverse order
+                            continue;
+                        }
+                        compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
+                        CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
+                        totalComparisons++;
+                    }
+                }
+            }
         }
     }
 
@@ -140,7 +188,7 @@ public class RetinalMatch
 
     private static void compareCleanedRetinas(Mat src1, Mat src2, String src1path, String src2path, Mat mask2){
 
-        double matchThreshold = 0.2;
+        double matchThreshold = 0.15;
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask2, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -160,7 +208,6 @@ public class RetinalMatch
         int result_rows = src1.rows() - templ.rows() + 1;
         result.create(result_rows, result_cols, CvType.CV_32FC1);
         int match_method = TM_CCOEFF_NORMED;
-
         matchTemplate(src1, templ, result, match_method);
         //Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
         Point matchLoc;
@@ -198,13 +245,13 @@ public class RetinalMatch
         if(mmr.maxVal > matchThreshold){
             if(!num1.equals(num2)) {
                 System.out.println("INCORRECT MATCH: " + mmr.maxVal + " " + src1path + "&" + src2path);
-
+                countOfFails++;
             }
         }
         else{
             if(num1.equals(num2)) {
                 System.out.println("NON-MATCH: " + mmr.maxVal + " " + src1path + "&" + src2path);
-
+                countOfFails++;
             }
         }
     }
