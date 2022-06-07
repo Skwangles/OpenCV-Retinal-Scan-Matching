@@ -43,8 +43,9 @@ public class RetinalMatch
 
         //CheckAll(prefix);
         //CheckAllSame(prefix);
-        //CheckSpecific(prefix, 3, 4, 4, 4);
+        //CheckSpecific(prefix, 4, 3, 5, 3);
         CheckCompletelyRandom(prefix, 500);
+        if(totalComparisons <= 0) return;
         System.out.println("Stats: Failure "+countOfFails/totalComparisons + "% - From " + countOfFails + "/" + totalComparisons + " Comparisons");
     }
 
@@ -53,16 +54,10 @@ public class RetinalMatch
     }
 
     public static void CheckAll(String prefix){
-        //Test all images here
-        HashSet<String> compared = new HashSet<>();
         for(int item1batch = 1; item1batch <= 5; item1batch++){
          for(int item1 = 1; item1 <= 20; item1++){
              for(int item2batch = 1; item2batch <= 5; item2batch++){
                  for (int item2 = 1; item2 <= 20; item2++){
-                     if(compared.contains(item2batch + "_" + item2 + "__"+item1batch + "_" + item1)){//Will only be in if in reverse order
-                         continue;
-                     }
-                     compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
                      CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
                         totalComparisons++;
                  }
@@ -85,7 +80,7 @@ public class RetinalMatch
                 item1 = rand.nextInt(20) + 1;
                 item2 = rand.nextInt(20) + 1;
             }
-            while(compared.contains(item2batch + "_" + item2 + "__"+item1batch + "_" + item1) || compared.contains(item1batch + "_" + item1 + "__"+item2batch + "_" + item2));
+            while(compared.contains(item1batch + "_" + item1 + "__"+item2batch + "_" + item2));//Order matters, thus why not checking flipped order
 
             compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
             CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
@@ -97,16 +92,11 @@ public class RetinalMatch
 
     public static void CheckAllSame(String prefix){
         //Test all images here
-        HashSet<String> compared = new HashSet<>();
         for(int item1batch = 1; item1batch <= 5; item1batch++){
             for(int item1 = 1; item1 <= 20; item1++){
                 for(int item2batch = 1; item2batch <= 5; item2batch++){
                     for (int item2 = 1; item2 <= 20; item2++){
                         if(item1 != item2) continue;
-                        if(compared.contains(item2batch + "_" + item2 + "__"+item1batch + "_" + item1)){//Will only be in if in reverse order
-                            continue;
-                        }
-                        compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
                         CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
                         totalComparisons++;
                     }
