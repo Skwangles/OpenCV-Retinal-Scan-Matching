@@ -89,8 +89,8 @@ Number was determined just from trial and error as to what returned the best num
 
 --
 
-Alternative ways experimented with:/
-Canny edge detection/
+Alternative ways experimented with:\
+Canny edge detection\
 Tried using Canny for edge detection, but found that the edges determined were too noisy and hard to de-noise when preparing the image for thresholding. When testing against laplacian edge detection, we found that Laplacian returned an easily thresholdable matrix & was filled in rather than the squiggly lines in Canny - we could easily threshold the laplacian’s result by matching the threshold to the delta of the Laplacian function. 
 
 Blurring/
