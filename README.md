@@ -27,7 +27,7 @@ Rowan Thorley -
 
 ## Retina Matching Pipeline
 
---
+---
 
 #### Convert Image to Grayscale
 Grayscale for single channel comparisons
@@ -82,49 +82,49 @@ We do not have both images cropped, because it is important the wiggle room is p
 Max value of the result matrix will be the best match - because it is a normalized method, so that which is closest to 1 is the best match. 
 In our testing, CCoeff_normed provided the best results.
 
-#### Determine the max/min value of the template match result/
+#### Determine the max/min value of the template match result
 Using minMaxLoc to find the max value. 
 Compare the max value with the boundary value (currently 0.123) - if so, trigger a positive match.
 Number was determined just from trial and error as to what returned the best number of positives, while still returning 0 false positives (partially correct)
 
---
+---
 
 Alternative ways experimented with:\
 Canny edge detection\
 Tried using Canny for edge detection, but found that the edges determined were too noisy and hard to de-noise when preparing the image for thresholding. When testing against laplacian edge detection, we found that Laplacian returned an easily thresholdable matrix & was filled in rather than the squiggly lines in Canny - we could easily threshold the laplacian’s result by matching the threshold to the delta of the Laplacian function. 
 
-Blurring/
+Blurring\
 Tried various orders of either gaussian blurs, median filter, before every step in the process. Checking before and after the amount of noise generated, to determine the best smoothing filter to use.
 
-Contrasting/
+Contrasting\
 Tested using the ‘equalizeHist’ function to match all the images’ brightnesses, however found that it produced too much noise in the edge filters, even after various stages of blurring.
 
 We found we had the best results when taking the grayscale image + a little contrasting + blurring, and applying the Laplacian edge detection algorithm over it. 
 The barely contrasted grayscale image preserved the intensity of the edges well enough for the Laplacian edge detection to return an accurate result.
 We found that just a little contrasting allowed the edges to be just a bit more intense for the edge detection, but for a minor reduction in performance having no contrasting would also be fine.  
 
-Thresholding/
+Thresholding\
 Used the adaptive thresholding on the image with an equalized histogram - however it had a significant amount of hard to remove noise. 
 We experimented with various modes of thresholding, Otsu, Binary, Trunc, and To Zero, however the default Binary mode returned the clearest result, with minimal extra steps required.
 
-Comparisons/
+Comparisons\
 We originally thought a histogram match would be the best, however, we found that getting images to a more accurate way of matching would 
  
-Performance/
+Performance\
 We had no issue with the speed of the system when comparing against large datasets (tested around 500-1000 at a time), so found that we did not need to downsize and/or reduce the resolution for this reason.
 
 
-Accuracy/
-Overall/
+Accuracy\
+Overall\
 The accuracy of the whole system against all ~5,000 combinations is around (+/- 2)  5/1000 
 (~99.5% success rate)
 This statistic was determined using a randomly generated distribution of images, and did not compare repeat combinations - order matters, so if 1-2 is already processed, the system can still process 2-1.
 
-Matching Values/
+Matching Values\
 When comparing against all images where a positive match should occur - 37/500 (92.6% success rate) comparisons return an incorrect negative result. Upon manual inspection the failures are from predominantly images where from one to the other, the photo’s retina has changed position a significant amount, such that a significant amount of new veins are visible and others are now hidden.
 
-Accuracy Conclusion/
-The error is consistently ~7.4%/
+Accuracy Conclusion\
+The error is consistently ~7.4%\
 The accuracy skew of the system is such that I have had 0 false positives, only false negatives in all of my testing, at a threshold of a required >12.3% match of the templates.
 
 
