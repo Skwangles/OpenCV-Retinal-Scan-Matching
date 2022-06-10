@@ -22,20 +22,6 @@ public class RetinalMatch
 
     public static void main(String[] args)
     {
-
-
-        //Pipeline
-        //Remember to clean up the image with smoothing filters
-        // • Choose a sensible colour channel or space to work in
-        // • Possible contrast equalization to ensure that variances in illumination don’t mess up the results
-        // • Pick image transformations (e.g. edges, thresholded, etc) and features
-        // • Hopefully get something that works
-
-        //Proposed pipeline - Autocontrast, threshold, intensity histogram
-        //unsharp masking?
-        //comparing image histograms - Vision lab 2
-        //Template matching??
-
         // load the OpenCV native library
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
@@ -131,7 +117,7 @@ public class RetinalMatch
 
 
         src1.convertTo(src1, -1, 1.2, 0);//changing contrast//
-        src2.convertTo(src2, -1, 1.2, 0);//changing contrast//
+        src2.convertTo(src2, -1, 1.2, 0);//changing contrast
 
         GaussianBlur(src1, src1, new Size(11,11), 0, 0, Core.BORDER_DEFAULT);
         GaussianBlur(src2, src2, new Size(11,11), 0, 0, Core.BORDER_DEFAULT);
