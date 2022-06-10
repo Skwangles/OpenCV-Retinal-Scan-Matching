@@ -42,15 +42,16 @@ public class RetinalMatch
         String prefix = "RIDB/IM00000";
 
         //CheckAll(prefix);
-        //CheckAllSame(prefix);
-        //CheckSpecific(prefix, 4, 3, 5, 3);
-        CheckCompletelyRandom(prefix, 500);
+        CheckAllSame(prefix);
+        //CheckSpecific(prefix, 1, 7, 2, 7);
+        //CheckCompletelyRandom(prefix, 1000);
         if(totalComparisons <= 0) return;
-        System.out.println("Stats: Failure "+countOfFails/totalComparisons + "% - From " + countOfFails + "/" + totalComparisons + " Comparisons");
+        System.out.println("Stats: Failure "+(countOfFails*100)/(totalComparisons*100) + "% - From " + countOfFails + "/" + totalComparisons + " Comparisons");
     }
 
     public static void CheckSpecific(String prefix, int batch1, int src1, int batch2, int src2){
         CheckImages(prefix + batch1 + "_" + src1 + ".JPG",prefix + batch2 + "_" + src2 + ".JPG");
+        totalComparisons++;
     }
 
     public static void CheckAll(String prefix){
@@ -120,15 +121,21 @@ public class RetinalMatch
         cvtColor(src1, src1, COLOR_BGR2GRAY);
         cvtColor(src2, src2, COLOR_BGR2GRAY);
 
+
+
         //Create mask to avoid comparing edge of the image
         Mat blackWhite1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
         Mat blackWhite2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
-
         threshold(src1, blackWhite1, 15, 255, THRESH_BINARY);
         threshold(src2, blackWhite2, 15, 255, THRESH_BINARY);
 
+
+        src1.convertTo(src1, -1, 1.2, 0);//changing contrast//
+        src2.convertTo(src2, -1, 1.2, 0);//changing contrast//
+
         GaussianBlur(src1, src1, new Size(11,11), 0, 0, Core.BORDER_DEFAULT);
         GaussianBlur(src2, src2, new Size(11,11), 0, 0, Core.BORDER_DEFAULT);
+
 
 
         //Edge detection
@@ -160,17 +167,17 @@ public class RetinalMatch
         //Do OPENING - not closing
         //Note, dilate does what erode should - idk why...
         int kernelSize = 1;
-        int elementType = CV_SHAPE_RECT;
+        int elementType = CV_SHAPE_CROSS;
         Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         dilate(src1, src1, element);
         dilate(src2, src2, element);
-
 
         kernelSize = 1;
         element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         erode(src1, src1, element);
         erode(src2, src2, element);
 
+        //printSrcs(src1, src2);
         compareCleanedRetinas(src1, src2, src1path, src2path, blackWhite2);
 
     }
@@ -178,7 +185,7 @@ public class RetinalMatch
 
     private static void compareCleanedRetinas(Mat src1, Mat src2, String src1path, String src2path, Mat mask2){
 
-        double matchThreshold = 0.15;
+        double matchThreshold = 0.123;
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask2, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -203,29 +210,6 @@ public class RetinalMatch
         Point matchLoc;
 
         Core.MinMaxLocResult mmr = minMaxLoc(result);
-//
-//        if (match_method == TM_SQDIFF || match_method == TM_SQDIFF_NORMED) {
-//            matchLoc = mmr.minLoc;
-//        } else {
-//            matchLoc = mmr.maxLoc;
-//            System.out.println(mmr.maxVal);
-//        }
-//
-//        //Drawing the matches
-//        rectangle(img_display, matchLoc, new Point(matchLoc.x + templ.cols(), matchLoc.y + templ.rows()),
-//                new Scalar(0, 0, 0), 2, 8, 0);
-//        rectangle(result, matchLoc, new Point(matchLoc.x + templ.cols(), matchLoc.y + templ.rows()),
-//                new Scalar(0, 0, 0), 2, 8, 0);
-//        result.convertTo(result, CvType.CV_8UC1, 255.0);
-//
-//
-//                namedWindow("templ");
-//                imshow("templ", src2);
-//                namedWindow("dis");
-//                imshow("dis", img_display);
-//                namedWindow("res");
-//                imshow("res", result);
-//                waitKey();
 
         //Determining if the match should be a match
         String[] strs1 = src1path.split("_");
