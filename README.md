@@ -26,52 +26,52 @@ Alexander Stokes - 1578409
 Rowan Thorley -
 
 Retina Matching Pipeline
->Convert Image to Grayscale
+> Convert Image to Grayscale
 Grayscale for single channel comparisons
 
->Generate threshold mask for later
+> Generate threshold mask for later
 Create the mask around the lens outline so it can be masked out later
 
->Contrasting
+> Contrasting
 Makes the veins stand out more for easier edge detection on the background
 
->Blur the grayscale image - Gaussian
+> Blur the grayscale image - Gaussian
 Smooth out the artifacts
 Gaussian blur returned what looked to be a better result than median blur. 
 
->Find the laplacian of gaussian edges
+> Find the laplacian of gaussian edges
 Experimented with canny, but laplacian returned the best result
 
->Blur the edges result - Gaussian
+> Blur the edges result - Gaussian
 Blur the result of the laplacian to smooth irrelevant lines.
 Gaussian blur returned a smoother image than that of median blur.
 
->Threshold based on delta of laplacian
+> Threshold based on delta of laplacian
 Turn the edge matrix into a white/black image
 
->Apply mask to image
+> Apply mask to image
 Remove the black outline - done after thresholding to remove the black outline.
 Done before the inversion of the image so the whole background goes to white. (important for template matching so that the thick black outline doesn’t impact different versions of the same image where the images are misaligned with where the retina is.
 
->Invert image
+> Invert image
 Switch to white background, black foreground to follow colouring conventions in lecture 11 - black foreground, white background.
 
->Median blur thresholded mat
+> Median blur thresholded mat
 Removes noise from the thresholded image, and blurs the thresholded image for dilation.
 Median blur was used to eliminate some 1 pixel wide noise, as the 1 pixel is not median it was not picked - it was important not to take the average like Gaussian, otherwise the noise would have been preserved.
 
->Open the image’s features
+> Open the image’s features
 (On windows dilate does what erode should, vice versa for some reason)
 Remove more noise from the thresholded image.
 Shrinks the noise first, then regrows the remaining structures for a clearer image.
 
 –Image is ready for template matching–
 
->Crop the 2nd image around the largest contour in the mask (Generated earlier)
+> Crop the 2nd image around the largest contour in the mask (Generated earlier)
 Removes the majority of the white space around the original image. 
 Uses the boundingRect of the largest contour to become smaller.
 
->Use the cropped 2nd image as a template to match template over the 1st image
+> Use the cropped 2nd image as a template to match template over the 1st image
 We do not crop the 1st image, as the white space makes for suitable padding for the template matching to work with. 
 We do not have both images cropped, because it is important the wiggle room is present for the matching.
 
