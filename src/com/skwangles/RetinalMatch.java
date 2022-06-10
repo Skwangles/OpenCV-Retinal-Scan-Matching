@@ -9,88 +9,24 @@ import java.util.*;
 import java.util.List;
 
 import static org.opencv.core.Core.minMaxLoc;
-import static org.opencv.highgui.HighGui.*;
 import static org.opencv.imgproc.Imgproc.*;
 
 
 public class RetinalMatch
 {
-    private static int countOfFails = 0;
-    private static int totalComparisons = 0;
-    private static Random rand = new Random();
-
-
     public static void main(String[] args)
     {
         // load the OpenCV native library
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-        String prefix = "RIDB/IM00000";
-
-        //CheckAll(prefix);
-        CheckAllSame(prefix);
-        //CheckSpecific(prefix, 1, 7, 2, 7);
-        //CheckCompletelyRandom(prefix, 1000);
-        if(totalComparisons <= 0) return;
-        System.out.println("Stats: Failure "+(countOfFails*100)/(totalComparisons*100) + "% - From " + countOfFails + "/" + totalComparisons + " Comparisons");
-    }
-
-    public static void CheckSpecific(String prefix, int batch1, int src1, int batch2, int src2){
-        CheckImages(prefix + batch1 + "_" + src1 + ".JPG",prefix + batch2 + "_" + src2 + ".JPG");
-        totalComparisons++;
-    }
-
-    public static void CheckAll(String prefix){
-        for(int item1batch = 1; item1batch <= 5; item1batch++){
-         for(int item1 = 1; item1 <= 20; item1++){
-             for(int item2batch = 1; item2batch <= 5; item2batch++){
-                 for (int item2 = 1; item2 <= 20; item2++){
-                     CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
-                        totalComparisons++;
-                 }
-             }
-         }
+        if(args.length != 2){
+            System.err.println("Incorrect Usage, Must have 2 arguments.\n Usage: RetinalMatch <image 1 path> <image 2 path>");
+            System.exit(0);
         }
-    }
-
-    public static void CheckCompletelyRandom(String prefix, int comparisons){
-        //Test all images here
-        HashSet<String> compared = new HashSet<>();
-        for(int i = 0; i < comparisons; i++){
-            int item1batch = 0;
-            int item2batch = 0;
-            int item1 = 0;
-            int item2 = 0;
-            do {
-                item1batch = rand.nextInt(5) + 1;
-                item2batch = rand.nextInt(5) + 1;
-                item1 = rand.nextInt(20) + 1;
-                item2 = rand.nextInt(20) + 1;
-            }
-            while(compared.contains(item1batch + "_" + item1 + "__"+item2batch + "_" + item2));//Order matters, thus why not checking flipped order
-
-            compared.add(item1batch + "_" + item1 + "__"+item2batch + "_" + item2);
-            CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
-            totalComparisons++;
-        }
+        CheckImages(args[0],args[1]);
     }
 
 
-
-    public static void CheckAllSame(String prefix){
-        //Test all images here
-        for(int item1batch = 1; item1batch <= 5; item1batch++){
-            for(int item1 = 1; item1 <= 20; item1++){
-                for(int item2batch = 1; item2batch <= 5; item2batch++){
-                    for (int item2 = 1; item2 <= 20; item2++){
-                        if(item1 != item2) continue;
-                        CheckImages(prefix + item1batch + "_" + item1 + ".JPG",prefix + item2batch + "_" + item2 + ".JPG");
-                        totalComparisons++;
-                    }
-                }
-            }
-        }
-    }
 
 
     public static void  CheckImages(String src1path, String src2path){
@@ -99,7 +35,7 @@ public class RetinalMatch
         Mat src2 = Imgcodecs.imread(src2path);
 
         if (src1.empty() || src2.empty()) {
-            System.err.println("Cannot read the images");
+            System.err.println("Cannot read the images supplied.");
             System.exit(0);
         }
 
@@ -107,13 +43,11 @@ public class RetinalMatch
         cvtColor(src1, src1, COLOR_BGR2GRAY);
         cvtColor(src2, src2, COLOR_BGR2GRAY);
 
-
-
         //Create mask to avoid comparing edge of the image
-        Mat blackWhite1 = Mat.zeros(src1.rows(), src1.cols(), src1.type());
-        Mat blackWhite2 = Mat.zeros(src2.rows(), src2.cols(), src2.type());
-        threshold(src1, blackWhite1, 15, 255, THRESH_BINARY);
-        threshold(src2, blackWhite2, 15, 255, THRESH_BINARY);
+        Mat src1Mask = Mat.zeros(src1.rows(), src1.cols(), src1.type());
+        Mat src2Mask = Mat.zeros(src2.rows(), src2.cols(), src2.type());
+        threshold(src1, src1Mask, 15, 255, THRESH_BINARY);
+        threshold(src2, src2Mask, 15, 255, THRESH_BINARY);
 
 
         src1.convertTo(src1, -1, 1.2, 0);//changing contrast//
@@ -139,8 +73,8 @@ public class RetinalMatch
         //Get binarised white with Black marks
         threshold(src1, src1, 41, 255, THRESH_BINARY);//is 40, as that is the minimum of the Laplacian
         threshold(src2, src2, 41, 255, THRESH_BINARY);
-        Core.bitwise_and(src1, blackWhite1, src1);
-        Core.bitwise_and(src2, blackWhite2, src2);
+        Core.bitwise_and(src1, src1Mask, src1);
+        Core.bitwise_and(src2, src2Mask, src2);
 
         Core.bitwise_not(src1, src1);
         Core.bitwise_not(src2,src2);
@@ -155,23 +89,23 @@ public class RetinalMatch
         int kernelSize = 1;
         int elementType = CV_SHAPE_CROSS;
         Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
-        dilate(src1, src1, element);
-        dilate(src2, src2, element);
-
-        kernelSize = 1;
-        element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         erode(src1, src1, element);
         erode(src2, src2, element);
 
-        //printSrcs(src1, src2);
-        compareCleanedRetinas(src1, src2, src1path, src2path, blackWhite2);
+        kernelSize = 1;
+        element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
+        dilate(src1, src1, element);
+        dilate(src2, src2, element);
+
+        compareCleanedRetinas(src1, src2, src2Mask);
 
     }
 
 
-    private static void compareCleanedRetinas(Mat src1, Mat src2, String src1path, String src2path, Mat mask2){
+    private static void compareCleanedRetinas(Mat src1, Mat src2, Mat mask2){
 
         double matchThreshold = 0.123;
+
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(mask2, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -185,43 +119,21 @@ public class RetinalMatch
         }
         Mat templ = new Mat(src2, boundingRect(cont));//Crop to maxsize contour
 
-        Mat result = new Mat(), img_display = new Mat();
-        src1.copyTo(img_display);
+        Mat result = new Mat();
         int result_cols = src1.cols() - templ.cols() + 1;
         int result_rows = src1.rows() - templ.rows() + 1;
         result.create(result_rows, result_cols, CvType.CV_32FC1);
+
         int match_method = TM_CCOEFF_NORMED;
         matchTemplate(src1, templ, result, match_method);
-        //Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
-        Point matchLoc;
 
         Core.MinMaxLocResult mmr = minMaxLoc(result);
 
-        //Determining if the match should be a match
-        String[] strs1 = src1path.split("_");
-        String num1 = strs1[1].substring(0,strs1[1].length()-4);
-        String[] strs2 = src2path.split("_");
-        String num2 = strs2[1].substring(0,strs2[1].length()-4);
-        if(mmr.maxVal > matchThreshold){
-            if(!num1.equals(num2)) {
-                System.out.println("INCORRECT MATCH: " + mmr.maxVal + " " + src1path + "&" + src2path);
-                countOfFails++;
-            }
-        }
-        else{
-            if(num1.equals(num2)) {
-                System.out.println("NON-MATCH: " + mmr.maxVal + " " + src1path + "&" + src2path);
-                countOfFails++;
-            }
-        }
-    }
+        //Print result
+        if(mmr.maxVal > matchThreshold)
+          System.out.println('1');
+        else
+            System.out.println('0');
 
-
-    public static void printSrcs(Mat src1, Mat src2){
-        namedWindow("src2");
-        imshow("src2", src2);
-        namedWindow("src1");
-        imshow("src1", src1);
-        waitKey();
     }
 }
