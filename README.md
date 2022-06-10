@@ -22,7 +22,7 @@ java RetinalMatch RIDB/IM000001_2.jpg RIDB/IM000002_2.jpg
 
 COMPX 301 - Retina Matching Assignment
 
-Alexander Stokes - 1578409
+Alexander Stokes - 1578409\
 Rowan Thorley -
 
 ## Retina Matching Pipeline
