@@ -20,7 +20,7 @@ public class RetinalMatch
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         if(args.length != 2){
-            System.err.println("Incorrect Usage, Must have 2 arguments.\n Usage: RetinalMatch <image 1 path> <image 2 path>");
+            System.err.println("Incorrect Usage, Must have 2 arguments.\nUsage: RetinalMatch <image 1 path> <image 2 path>");
             System.exit(0);
         }
         CheckImages(args[0],args[1]);
@@ -97,12 +97,20 @@ public class RetinalMatch
         dilate(src1, src1, element);
         dilate(src2, src2, element);
 
-        compareCleanedRetinas(src1, src2, src2Mask);
+        if(!compareCleanedRetinas(src1, src2, src2Mask)) {
+            if(!compareCleanedRetinas(src2, src1, src1Mask)){
+                System.out.println('0');
+            }
+            else
+                System.out.println('1');
+        }
+        else
+            System.out.println('1');
 
     }
 
 
-    private static void compareCleanedRetinas(Mat src1, Mat src2, Mat mask2){
+    private static boolean compareCleanedRetinas(Mat src1, Mat src2, Mat mask2){
 
         double matchThreshold = 0.123;
 
@@ -130,10 +138,6 @@ public class RetinalMatch
         Core.MinMaxLocResult mmr = minMaxLoc(result);
 
         //Print result
-        if(mmr.maxVal > matchThreshold)
-          System.out.println('1');
-        else
-            System.out.println('0');
-
+        return mmr.maxVal > matchThreshold;
     }
 }
