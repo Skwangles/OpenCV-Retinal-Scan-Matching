@@ -23,41 +23,41 @@ Alexander Stokes - 1578409\
 Rowan Thorley - 1650315\
 
 Retina Matching Pipeline\
->Convert Image to Grayscale\
+> Convert Image to Grayscale\
 Grayscale for single channel comparisons\
->Generate threshold mask for later\
+> Generate threshold mask for later\
 Create the mask around the lens outline so it can be masked out later\
->Contrasting\
+> Contrasting\
 Makes the veins stand out more for easier edge detection on the background\
->Blur the grayscale image - Gaussian\
+> Blur the grayscale image - Gaussian\
 Smooth out the artifacts
 Gaussian blur returned what looked to be a better result than median blur. \
->Find the laplacian of gaussian edges\
+> Find the laplacian of gaussian edges\
 Experimented with canny, but laplacian returned the best result\
->Blur the edges result - Gaussian\
+> Blur the edges result - Gaussian\
 Blur the result of the laplacian to smooth irrelevant lines.
 Gaussian blur returned a smoother image than that of median blur.\
->Threshold based on delta of laplacian\
+> Threshold based on delta of laplacian\
 Turn the edge matrix into a white/black image\
->Apply mask to image\
+> Apply mask to image\
 Remove the black outline - done after thresholding to remove the black outline.
 Done before the inversion of the image so the whole background goes to white. (important for template matching so that the thick black outline doesn’t impact different versions of the same image where the images are misaligned with where the retina is.\
->Invert image\
+> Invert image\
 Switch to white background, black foreground to follow colouring conventions in lecture 11 - black foreground, white background.\
->Median blur thresholded mat\
+> Median blur thresholded mat\
 Removes noise from the thresholded image, and blurs the thresholded image for dilation.
 Median blur was used to eliminate some 1 pixel wide noise, as the 1 pixel is not median it was not picked - it was important not to take the average like Gaussian, otherwise the noise would have been preserved.
->Open the image’s features\
+> Open the image’s features\
 (On windows dilate does what erode should, vice versa for some reason)
 Remove more noise from the thresholded image.
 Shrinks the noise first, then regrows the remaining structures for a clearer image.\
 
 –Template Matching-\
 
->Crop the 2nd image around the largest contour in the mask (Mask generated earlier)\
+> Crop the 2nd image around the largest contour in the mask (Mask generated earlier)\
 Removes the majority of the white space around the original image. 
 Uses the boundingRect of the largest contour to become smaller.
->Use the cropped 2nd image as a template to match template over the 1st image
+> Use the cropped 2nd image as a template to match template over the 1st image
 We do not crop the 1st image, as the white space makes for suitable padding for the template matching to work with. 
 We do not have both images cropped, because it is important the wiggle room is present for the matching.\
 
@@ -68,7 +68,7 @@ In our testing, CCoeff_normed provided the best results.
 Using minMaxLoc to find the max value. 
 Compare the max value with the boundary value (currently 0.123) - if so, trigger a positive match.
 Number was determined just from trial and error as to what returned the best number of positives, while still returning 0 false positives (partially correct)
->Repeat template matching process with reversed roles (image 1 is template, image 2 is image)
+> Repeat template matching process with reversed roles (image 1 is template, image 2 is image)
 Because we have a record of 0 false positives, we can assume that if either of the 2 template matches return true, there is a definite match. 
 We compare the first permutation( img 1 vs img2), if false, then we compare the reversed permutation (img 2 vs img 1) - if neither returns true, it is a non-match. 
 This step improved our overall accuracy from 99.2% to 99.8%, because there were some permutations where image 1 wouldn’t template match with image 2, but 2 would match with 1.\
