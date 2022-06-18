@@ -1,5 +1,4 @@
-package com.skwangles;
-
+//Alexander Stokes - 1578409, Rowan Thorley -
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -83,15 +82,17 @@ public class RetinalMatch
         medianBlur(src1, src1, 5);
         medianBlur(src2, src2, 5);
 
+        
         //--remove small strctures then grow remaining--
         //Do OPENING - not closing
-        //Note, dilate does what erode should - idk why...
+        //Note, dilate does what erode should - idk why..., so I've just switched it so erode is called where erode should be called, however it does the opposite
         int kernelSize = 1;
         int elementType = CV_SHAPE_CROSS;
         Mat element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         erode(src1, src1, element);
         erode(src2, src2, element);
-
+        
+	
         kernelSize = 1;
         element = Imgproc.getStructuringElement(elementType, new Size(2 * kernelSize + 1, 2 * kernelSize + 1), new Point(kernelSize, kernelSize));
         dilate(src1, src1, element);
