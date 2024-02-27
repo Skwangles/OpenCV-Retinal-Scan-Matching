@@ -2,7 +2,7 @@
 
 
 
-# COMPX301-RetinalScans-Compare
+# Comparing Retinal Scans
 ## Usage
 ```
 export CLASSPATH="/usr/share/java/opencv-420.jar:."
