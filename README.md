@@ -17,7 +17,7 @@ java RetinalMatch RIDB/IM000001_2.jpg RIDB/IM000002_2.jpg
 ```
 
 
-COMPX 301 - Retina Matching Assignment\
+University assignment for retinal scan matching\
 
 Alexander Stokes - 1578409\
 Rowan Thorley - 1650315\
