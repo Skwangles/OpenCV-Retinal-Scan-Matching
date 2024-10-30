@@ -19,8 +19,8 @@ java RetinalMatch RIDB/IM000001_2.jpg RIDB/IM000002_2.jpg
 
 University assignment for retinal scan matching\
 
-Alexander Stokes - 1578409\
-Rowan Thorley - 1650315\
+Alexander Stokes 
+Rowan Thorley 
 
 Retina Matching Pipeline\
 > Convert Image to Grayscale\
