@@ -1,134 +1,106 @@
+# OpenCV Retinal Scan Matching
 
+Java/OpenCV command-line prototype for comparing two retinal images and returning a binary match decision.
 
+## Project status (as of 2026-10-04)
 
+- University assignment prototype
+- Single Java source file (`RetinalMatch.java`)
+- No build system (`pom.xml`, `gradle`, etc.) or automated tests in this repository
 
-# Comparing Retinal Scans
-## Usage
+## Current features
+
+- Reads two image paths from CLI arguments
+- Preprocesses both images (grayscale, masking, contrast, blur, Laplacian edges, thresholding, inversion, denoising)
+- Performs template matching (`TM_CCOEFF_NORMED`) in both directions
+- Returns:
+  - `1` for match
+  - `0` for non-match
+
+## Technology stack
+
+- Java (CLI application)
+- OpenCV Java API (`org.opencv.*`)
+
+## Repository structure
+
+```text
+.
+├── RetinalMatch.java              # Main program
+├── README.md                      # This documentation
+└── Compx301 - Retina Matching.pdf # Assignment/project report
 ```
+
+## Prerequisites
+
+You need:
+
+- A Java compiler/runtime (JDK)
+- OpenCV Java bindings (JAR)
+- OpenCV native library available to `System.loadLibrary(Core.NATIVE_LIBRARY_NAME)`
+
+> The repository does not pin a Java or OpenCV version. The previous usage example referenced `opencv-420.jar`.
+
+## Build and run
+
+The project is compiled directly with `javac`:
+
+```bash
 export CLASSPATH="/usr/share/java/opencv-420.jar:."
 javac -d . RetinalMatch.java
-java RetinalMatch <path to image 1>.jpg <path to image 2>.jpg
+java RetinalMatch <path-to-image-1>.jpg <path-to-image-2>.jpg
 ```
-### Example Code
-```
+
+Example:
+
+```bash
 export CLASSPATH="/usr/share/java/opencv-420.jar:."
 javac -d . RetinalMatch.java
 java RetinalMatch RIDB/IM000001_2.jpg RIDB/IM000002_2.jpg
 ```
 
+## How matching works (implemented pipeline)
 
-University assignment for retinal scan matching\
+1. Convert both images to grayscale
+2. Build masks using binary thresholding (to suppress border/background effects)
+3. Increase contrast and apply Gaussian blur
+4. Detect edges using Laplacian, then blur again
+5. Threshold and apply the masks
+6. Invert image colors and denoise with median blur
+7. Apply morphological opening (erode then dilate)
+8. Crop template image to largest contour region from mask
+9. Run normalized cross-correlation template match
+10. Accept if `maxVal > 0.123`
+11. Repeat with images swapped; match succeeds if either direction succeeds
 
-Alexander Stokes 
-Rowan Thorley 
+## Testing
 
-Retina Matching Pipeline\
-> Convert Image to Grayscale\
-Grayscale for single channel comparisons\
+There is no automated test suite in this repository. Validation is manual:
 
-> Generate threshold mask for later\
-Create the mask around the lens outline so it can be masked out later\
+1. Compile the program successfully
+2. Run known matching and non-matching image pairs
+3. Confirm output is `1` for matches and `0` for non-matches
 
-> Contrasting\
-Makes the veins stand out more for easier edge detection on the background\
+## Configuration details
 
-> Blur the grayscale image - Gaussian\
-Smooth out the artifacts
-Gaussian blur returned what looked to be a better result than median blur. \
+Current tunables are hard-coded in `RetinalMatch.java`, including:
 
-> Find the laplacian of gaussian edges\
-Experimented with canny, but laplacian returned the best result\
+- Match threshold: `0.123`
+- Blur kernel sizes
+- Threshold constants
+- Morphological kernel settings
 
-> Blur the edges result - Gaussian\
-Blur the result of the laplacian to smooth irrelevant lines.
-Gaussian blur returned a smoother image than that of median blur.\
+Changing behavior currently requires editing source code.
 
-> Threshold based on delta of laplacian\
-Turn the edge matrix into a white/black image\
+## Limitations
 
-> Apply mask to image\
-Remove the black outline - done after thresholding to remove the black outline.
-Done before the inversion of the image so the whole background goes to white. (important for template matching so that the thick black outline doesn’t impact different versions of the same image where the images are misaligned with where the retina is.\
+- Assumes exactly two valid image file arguments
+- Exits on image load failure
+- No package/dependency manager or reproducible build config
+- No automated tests/benchmarks in-repo
+- Reported accuracy/performance claims are from assignment experimentation, not continuously verified CI
 
-> Invert image\
-Switch to white background, black foreground to follow colouring conventions in lecture 11 - black foreground, white background.\
+## Attribution and licensing
 
-> Median blur thresholded mat\
-Removes noise from the thresholded image, and blurs the thresholded image for dilation.
-Median blur was used to eliminate some 1 pixel wide noise, as the 1 pixel is not median it was not picked - it was important not to take the average like Gaussian, otherwise the noise would have been preserved.
-
-> Open the image’s features\
-(On windows dilate does what erode should, vice versa for some reason)
-Remove more noise from the thresholded image.
-Shrinks the noise first, then regrows the remaining structures for a clearer image.\
-
-–Template Matching-\
-
-> Crop the 2nd image around the largest contour in the mask (Mask generated earlier)\
-Removes the majority of the white space around the original image. 
-Uses the boundingRect of the largest contour to become smaller.
-
-> Use the cropped 2nd image as a template to match template over the 1st image
-We do not crop the 1st image, as the white space makes for suitable padding for the template matching to work with. 
-We do not have both images cropped, because it is important the wiggle room is present for the matching.\
-
-> Use CCoefficient Normalized template matching method\
-Max value of the result matrix will be the best match - because it is a normalized method, so that which is closest to 1 is the best match. 
-In our testing, CCoeff_normed provided the best results.
-
-> Determine the max/min value of the template match result\
-Using minMaxLoc to find the max value. 
-Compare the max value with the boundary value (currently 0.123) - if so, trigger a positive match.
-Number was determined just from trial and error as to what returned the best number of positives, while still returning 0 false positives (partially correct)
-
-> Repeat template matching process with reversed roles (image 1 is template, image 2 is image)
-Because we have a record of 0 false positives, we can assume that if either of the 2 template matches return true, there is a definite match. 
-We compare the first permutation( img 1 vs img2), if false, then we compare the reversed permutation (img 2 vs img 1) - if neither returns true, it is a non-match. 
-This step improved our overall accuracy from 99.2% to 99.8%, because there were some permutations where image 1 wouldn’t template match with image 2, but 2 would match with 1.\
-
-Alternative ways experimented with:\
-Canny edge detection\
-Tried using Canny for edge detection, but found that the edges determined were too noisy and hard to de-noise when preparing the image for thresholding. When testing against laplacian edge detection, we found that Laplacian returned an easily thresholdable matrix & was filled in upon thresholding, rather than the squiggly lines in Canny - we could easily threshold the laplacian’s result by matching the threshold to the delta of the Laplacian function. \
-
-Blurring\
-Tried various orders of either gaussian blurs, median filter, before every step in the process. Checking before and after the amount of noise generated, to determine the best smoothing filter to use. 
-The location of blurring is important, e.g. by removing gaussian blur before Laplacian edge filter, our success rate dropped to 20.1% success.\
-
-Contrasting\
-Tested using the ‘equalizeHist’ function to match all the images’ brightnesses, however found that it produced too much noise in the edge filters, even after various stages of blurring.\
-
-We found we had the best results when taking the grayscale image + a little contrasting + blurring, and applying the Laplacian edge detection algorithm over it. 
-The barely contrasted grayscale image preserved the intensity of the edges well enough for the Laplacian edge detection to return an accurate result.
-We found that just a little contrasting allowed the edges to be just a bit more intense for the edge detection, but for a minor reduction in performance having no contrasting would also be fine. \ 
-
-Thresholding\
-Used the adaptive thresholding on the image with an equalized histogram - however it had a significant amount of hard to remove noise even after both smoothing and median filters. 
-We experimented with various modes of thresholding, Otsu, Binary, Trunc, and To Zero, however the default Binary mode (combined with laplacian) returned the clearest result, with minimal extra steps/artifact removal required.\
-
-
-
-Comparisons\
-We originally thought a histogram match would be the best, however, we found that using a thresholded image (where the only values are black or white). Unless we did spatial pyramid histogram matching, it wouldn’t work. Since we had taken the path of extracting a thresholded image of the veins, we instead looked to template matching as a more suitable match for our method.\
- 
-Performance\
-We had no issue with the speed of the system when comparing against large datasets (tested around 500-1000 at a time), so found that we did not need to downsize and/or reduce the resolution of the images for this reason.\
-
-Accuracy\
-Overall\
-The accuracy of the whole system  is around (+/- 1)  2/1000
-(~99.8% success rate)\
-This statistic was determined using a randomly generated distribution of images, and did not compare repeat combinations, 1000 unique pairings from the ~5000 combinations were chosen.\
--Originally we compared only 1 permutation of the images, i.e. image 1 against 2 for the template match, which yielded a 99.2% success rate (5/1000 comparisons) - once we implemented checking both permutations, i.e. image 2 against 1, the accuracy improved to a  99.8% success rate (2/1000).\
-
-Accuracy for Matching Values (Comparing matching retinas only)\
-When comparing against all images where a positive match should occur - 12/500 (97.6% success rate).\
-Failures are from predominantly images where from one to the other, the photo’s retina has changed position a significant amount, such that a significant amount of new veins are visible and others are now hidden.\
--Originally we compared only 1 permutation of the images, i.e. image 1 against 2 for the template match, which yielded an accuracy of 37/500 (92.6% success) - once we implemented checking both permutations, i.e. image 2 against 1, the accuracy shot up to 12/500 (97.6% success) \
-
-Accuracy Conclusion\
-The error is consistently ~2-3% max\
-The accuracy skew of the system is such that I have had 0 false positives, only false negatives in all of my testing, at a threshold of a required >12.3% match of the templates.\
-
-
-
-
+- Authors listed in source/README: Alexander Stokes, Rowan Thorley
+- This repository currently does not include an explicit `LICENSE` file
